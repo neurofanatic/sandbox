@@ -24,4 +24,5 @@ print(p1.kp, p2.kp)
         
 #         break
 
+pokemon()
 

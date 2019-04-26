@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import shutil
 
+
 def getImageData(url):   #input url ---> output: class() getImageData.filename,volume,chapter...
   matches = re.search('vol(\d+)_chapter_(\d+)_(\w+)/(\d+)\.jpg', url)
   volume = matches.group(1).zfill(3)
@@ -16,13 +17,22 @@ def getImageData(url):   #input url ---> output: class() getImageData.filename,v
   chapterName = matches.group(3)
   imageNumber = matches.group(4).zfill(3)
   filename = "volume_" + volume + '-chapter_' + chapter + '-' + chapterName + '-' + imageNumber + '.jpg'
-  return SimpleNamespace(
-    filename=filename,
-    volume=volume,
-    chapter=chapter,
-    imageNumber=imageNumber,
-    chapterName=chapterName
-  )
+  # return SimpleNamespace(
+  #   filename=filename,
+  #   volume=volume,
+  #   chapter=chapter,
+  #   imageNumber=imageNumber,
+  #   chapterName=chapterName
+  #)
+  return {
+    "filename": filename,
+    "volume" : volume,
+    "chapter": chapter,
+    "imageNumber": imageNumber,
+    "chapterName": chapterName
+  }
+
+  
 
 def findImageUrls(html): #input html ---> output alle imageUrls
   page_soup = soup(html, "html.parser")
@@ -65,12 +75,18 @@ def getChapter(tag): # ---> output: class() getChapter.url, title, volume, chapt
       volume = matches.group(1).zfill(3)
       chapter = matches.group(2).zfill(3)
 
-  return SimpleNamespace(
-    url = url,
-    title = title,
-    volume = volume,
-    chapter = chapter
-  )
+  # return SimpleNamespace(
+  #   url = url,
+  #   title = title,
+  #   volume = volume,
+  #   chapter = chapter
+  # )
+  return {
+    "url": url,
+    "title": title,
+    "volume": volume,
+    "chapter": chapter
+  }
 
 def getChapters(url): #----> Liste mit allen Chaptern
   html = fetchPage(url)
@@ -79,20 +95,20 @@ def getChapters(url): #----> Liste mit allen Chaptern
   chapters = []
   for tag in linkTags:
     chapters.append(getChapter(tag))
-  return filter(lambda chapter: chapter.volume and chapter.url and '/chapter/' in chapter.url and 'vagabond' in chapter.url, chapters)
+  return filter(lambda chapter: chapter["volume"] and chapter["url"] and '/chapter/' in chapter["url"] and 'vagabond' in chapter["url"], chapters)
 
 
 baseUrl = 'https://manganelo.com/manga/read_vagabond_manga'
 
 chapters = getChapters(baseUrl)
 for chapter in chapters:
-  path = createDirectory(chapter.volume, chapter.chapter)
-  html = fetchPage(chapter.url)
+  path = createDirectory(chapter["volume"], chapter["chapter"])
+  html = fetchPage(chapter["url"])
   imageUrls = findImageUrls(html)
 
   for url in imageUrls:
     data = getImageData(url)
-    name = path / data.filename
+    name = path / data["filename"]
 
     img = requests.get(url).content
     with open(name, 'wb') as handler:
